@@ -1,7 +1,10 @@
 import panel as pn
 import pandas as pd
 import plotly.graph_objects as go
-from simulator import Simulator
+# Import du simulateur depuis le paquet `launcher`
+# afin que les imports relatifs internes fonctionnent lorsque
+# ce script est servi avec Panel depuis la racine du projet.
+from launcher.simulator import Simulator
 import numpy as np
 import time
 import os
