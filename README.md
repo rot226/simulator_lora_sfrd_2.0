@@ -1,43 +1,35 @@
-src/
-    node.py
-    gateway.py
-    channel.py
-    server.py
-    simulator.py
-    dashboard.py
-    __init__.py
-run.py
-requirements.txt
-README.md
+# Simulateur Réseau LoRa
 
-# Simulateur Réseau LoRa (Python 3.10+)
+Ce dépôt contient un simulateur complet de réseau LoRa réalisé en Python. Le code source principal se trouve dans `VERSION_8/launcher` et s'utilise soit via l'interface graphique Panel soit en ligne de commande.
 
-Bienvenue ! Ce projet est un **simulateur complet de réseau LoRa**, inspiré du fonctionnement de FLoRa sous OMNeT++, codé entièrement en Python.
+## Installation
 
-## 🛠️ Installation
-
-1. **Clonez ou téléchargez** le projet.
-2. **Créez un environnement virtuel** (optionnel mais recommandé) :
+1. Clonez ce dépôt puis créez un environnement virtuel (optionnel mais recommandé):
    ```bash
    python3 -m venv env
    source env/bin/activate  # Sous Windows : env\Scripts\activate
+   ```
+2. Installez les dépendances :
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Lancement du tableau de bord Panel
+
+Exécutez la commande suivante pour démarrer l'interface graphique permettant de configurer et lancer la simulation :
+
+```bash
+panel serve VERSION_8/launcher/dashboard.py --show
 ```
 
-pip install -r requirements.txt
+## Utilisation en ligne de commande
 
-panel serve dashboard.py --show
+La simulation peut aussi être exécutée sans interface :
 
-python run.py --nodes 30 --gateways 1 --area 1000 --mode Random --interval 10 --steps 100 --output resultats.csv
-
-python run.py --nodes 20 --mode Random --interval 15
-
-python run.py --nodes 5 --mode Periodic --interval 10
-
-panel serve dashboard.py --show
+```bash
+python VERSION_8/run.py --nodes 30 --gateways 1 --area 1000 --mode Random --interval 10 --steps 100 --output resultats.csv
+```
 
 ## Mobilité optionnelle
 
-Dans le `dashboard`, la case « Activer la mobilité des nœuds » permet de choisir
-si les nœuds se déplacent pendant la simulation. Cette option correspond au
-paramètre `mobility` du `Simulator`. Si elle est décochée, tous les nœuds
-demeurent statiques.
+Dans le `dashboard`, la case « Activer la mobilité des nœuds » permet de choisir si les nœuds se déplacent pendant la simulation. Cette option correspond au paramètre `mobility` du `Simulator`. Si elle est décochée, tous les nœuds demeurent statiques.
