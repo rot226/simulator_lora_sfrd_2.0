@@ -115,7 +115,7 @@ class Gateway:
                 self.active_transmissions.remove(t)
                 # Si elle n'était pas marquée perdue, on considère le paquet reçu avec succès
                 if not t['lost_flag']:
-                    network_server.receive(event_id, node_id, self.id)
+                    network_server.receive(event_id, node_id, self.id, t['rssi'])
                     logger.debug(f"Gateway {self.id}: successfully received event {event_id} from node {node_id}.")
                 else:
                     # Paquet perdu sur cette passerelle (collision ou signal trop faible), on ne notifie pas le serveur
