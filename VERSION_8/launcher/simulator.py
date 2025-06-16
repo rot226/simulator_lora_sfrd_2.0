@@ -7,6 +7,7 @@ from node import Node
 from gateway import Gateway
 from channel import Channel
 from server import NetworkServer
+from mobility import RandomWaypoint
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,8 @@ class Simulator:
     
     def __init__(self, num_nodes: int = 10, num_gateways: int = 1, area_size: float = 1000.0,
                  transmission_mode: str = 'Random', packet_interval: float = 60.0,
-                 packets_to_send: int = 0, adr_node: bool = False, adr_server: bool = False):
+                 packets_to_send: int = 0, adr_node: bool = False, adr_server: bool = False,
+                 mobility_step: float = 1.0):
         """
         Initialise la simulation LoRa avec les entités et paramètres donnés.
         :param num_nodes: Nombre de nœuds à simuler.
@@ -30,6 +32,7 @@ class Simulator:
         :param packets_to_send: Nombre total de paquets à émettre avant d'arrêter la simulation (0 = infini).
         :param adr_node: Activation de l'ADR côté nœud.
         :param adr_server: Activation de l'ADR côté serveur.
+        :param mobility_step: Pas de temps entre deux mises à jour de la mobilité (s).
         """
         # Paramètres de simulation
         self.num_nodes = num_nodes
@@ -40,6 +43,10 @@ class Simulator:
         self.packets_to_send = packets_to_send
         self.adr_node = adr_node
         self.adr_server = adr_server
+        self.mobility_step = mobility_step
+
+        # Modèle de mobilité
+        self.mobility_model = RandomWaypoint(area_size)
         
         # Initialiser le canal radio et le serveur réseau
         self.channel = Channel()
@@ -76,6 +83,8 @@ class Simulator:
             node.in_transmission = False # Indique si le nœud est actuellement en transmission
             node.current_end_time = None # Instant de fin de la transmission en cours (si in_transmission True)
             node.last_rssi = None       # Dernier meilleur RSSI mesuré pour la transmission en cours
+            # Initialiser la mobilité du noeud
+            self.mobility_model.assign(node)
             self.nodes.append(node)
         
         # File d'événements (min-heap)
@@ -104,8 +113,8 @@ class Simulator:
                 # Periodic: délai initial aléatoire uniforme dans [0, période]
                 t0 = np.random.rand() * self.packet_interval
             self.schedule_event(node, t0)
-            # Planifier le premier changement de position au bout de 10 secondes
-            self.schedule_mobility(node, 10.0)
+            # Planifier la première mise à jour de position
+            self.schedule_mobility(node, self.mobility_step)
         
         # Indicateur d'exécution de la simulation
         self.running = True
@@ -118,7 +127,7 @@ class Simulator:
         logger.debug(f"Scheduled transmission {event_id} for node {node.id} at t={time:.2f}s")
     
     def schedule_mobility(self, node: Node, time: float):
-        """Planifie un événement de mobilité (déplacement aléatoire) pour un nœud à l'instant donné."""
+        """Planifie un événement de mise à jour de la position pour un nœud."""
         event_id = self.event_id_counter
         self.event_id_counter += 1
         heapq.heappush(self.event_queue, (time, 2, event_id, node))
@@ -295,31 +304,21 @@ class Simulator:
             return True
         
         elif priority == 2:
-            # Événement de mobilité (changement de position du nœud)
-            node_id = node.id
-            if node.in_transmission:
-                # Si le nœud est en cours de transmission, reporter le déplacement à la fin de celle-ci
-                next_move_time = node.current_end_time if node.current_end_time is not None else self.current_time
-                self.schedule_mobility(node, next_move_time)
-            else:
-                # Déplacer le nœud à une nouvelle position aléatoire
-                node.x = np.random.rand() * self.area_size
-                node.y = np.random.rand() * self.area_size
-                # Enregistrer l'événement de mobilité dans le log
-                self.events_log.append({
-                    'event_id': event_id,
-                    'node_id': node_id,
-                    'sf': node.sf,
-                    'start_time': time,
-                    'end_time': time,
-                    'heard': None,
-                    'result': 'Mobility',
-                    'energy_J': 0.0,
-                    'gateway_id': None
-                })
-                # Planifier le prochain déplacement dans 10 secondes (si simulation toujours active)
-                if self.packets_to_send == 0 or self.packets_sent < self.packets_to_send:
-                    self.schedule_mobility(node, time + 10.0)
+            # Événement de mobilité : mise à jour continue de la position
+            self.mobility_model.move(node, self.current_time)
+            self.events_log.append({
+                'event_id': event_id,
+                'node_id': node.id,
+                'sf': node.sf,
+                'start_time': time,
+                'end_time': time,
+                'heard': None,
+                'result': 'Mobility',
+                'energy_J': 0.0,
+                'gateway_id': None
+            })
+            if self.packets_to_send == 0 or self.packets_sent < self.packets_to_send:
+                self.schedule_mobility(node, time + self.mobility_step)
             return True
         
         # Si autre type d'événement (non prévu)

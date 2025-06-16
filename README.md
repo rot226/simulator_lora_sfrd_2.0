@@ -34,3 +34,10 @@ python run.py --nodes 20 --mode Random --interval 15
 python run.py --nodes 5 --mode Periodic --interval 10
 
 panel serve dashboard.py --show
+
+## Mobilité continue des nœuds
+
+Depuis la version 8, la simulation gère un déplacement linéaire des nœuds. Le
+paramètre `mobility_step` du constructeur `Simulator` (valeur par défaut 1
+seconde) définit la période entre deux mises à jour de position. Les nœuds se
+déplacent alors en ligne droite en rebondissant sur les bords de l'aire.
