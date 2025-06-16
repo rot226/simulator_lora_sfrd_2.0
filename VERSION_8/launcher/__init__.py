@@ -4,3 +4,4 @@ from .gateway import Gateway
 from .channel import Channel
 from .server import NetworkServer
 from .simulator import Simulator
+from .duty_cycle import DutyCycleManager
