@@ -58,18 +58,15 @@ class Channel:
         return rssi
 
     def airtime(self, sf: int, payload_size: int = 20) -> float:
-        """Calcule le temps de transmission (airtime) en secondes pour un paquet LoRa donné."""
-        # Durée d'un symbole (seconde)
-        rs = self.bandwidth / (2 ** sf)  # débit symbole (baud)
-        ts = 1 / rs  # durée d'un symbole
-        # Facteur d'optimisation basse débit (DE)
+        """Calcule l'airtime complet d'un paquet LoRa en secondes."""
+        # Durée d'un symbole
+        rs = self.bandwidth / (2 ** sf)
+        ts = 1.0 / rs
         de = 1 if sf >= self.low_data_rate_threshold else 0
-        # Paramètres du calcul de symboles payload
-        payload_bytes = payload_size
-        cr_denom = self.coding_rate + 4  # dénominateur lié au coding rate (CR=1 -> 4+1=5)
-        # Formule de calcul du nombre de symboles (documentation LoRa)
-        numerator = 8 * payload_bytes - 4 * sf + 28 + 16 - 20 * 0  # CRC=1, header explicite (IH=0)
+        cr_denom = self.coding_rate + 4
+        numerator = 8 * payload_size - 4 * sf + 28 + 16 - 20 * 0
         denominator = 4 * (sf - 2 * de)
-        payload_symb_nb = 8 + max(math.ceil(numerator / denominator) * cr_denom, 0)
-        t_packet = payload_symb_nb * ts
-        return t_packet
+        n_payload = max(math.ceil(numerator / denominator), 0) * cr_denom + 8
+        t_preamble = (self.preamble_symbols + 4.25) * ts
+        t_payload = n_payload * ts
+        return t_preamble + t_payload
