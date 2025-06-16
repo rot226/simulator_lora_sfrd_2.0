@@ -77,6 +77,12 @@ class Simulator:
             node.current_end_time = None # Instant de fin de la transmission en cours (si in_transmission True)
             node.last_rssi = None       # Dernier meilleur RSSI mesuré pour la transmission en cours
             self.nodes.append(node)
+
+        # Configurer le serveur réseau avec les références pour ADR
+        self.network_server.adr_enabled = self.adr_server
+        self.network_server.nodes = self.nodes
+        self.network_server.gateways = self.gateways
+        self.network_server.channel = self.channel
         
         # File d'événements (min-heap)
         self.event_queue = []
