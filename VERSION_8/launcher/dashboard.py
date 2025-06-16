@@ -8,6 +8,7 @@ import os
 
 # --- Initialisation Panel ---
 pn.extension('plotly')
+pn.config.title = "Simulateur LoRa"
 
 # --- Variables globales ---
 sim = None
@@ -306,4 +307,4 @@ dashboard = pn.Column(
     pn.Row(map_pane, metrics_col, sizing_mode='stretch_width'),
     sf_hist_pane,
 )
-dashboard.servable()
+dashboard.servable(title="Simulateur LoRa")
