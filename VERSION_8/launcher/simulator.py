@@ -147,6 +147,7 @@ class Simulator:
             p_mW = 10 ** (tx_power / 10.0)  # convertir dBm en mW
             energy_J = (p_mW / 1000.0) * duration
             self.total_energy_J += energy_J
+            node.add_energy(energy_J)
             # Marquer le nœud comme en cours de transmission
             node.in_transmission = True
             node.current_end_time = end_time
