@@ -168,7 +168,8 @@ def on_start(event):
         packet_interval=float(interval_input.value),
         packets_to_send=int(packets_input.value),
         adr_node=adr_node_checkbox.value,
-        adr_server=adr_server_checkbox.value
+        adr_server=adr_server_checkbox.value,
+        mobility=mobility_checkbox.value
     )
 
     if mobility_checkbox.value:
@@ -273,6 +274,7 @@ def on_mobility_toggle(event):
             if mobility_callback:
                 mobility_callback.stop()
                 mobility_callback = None
+        sim.mobility_enabled = event.new
 
 mobility_checkbox.param.watch(on_mobility_toggle, 'value')
 

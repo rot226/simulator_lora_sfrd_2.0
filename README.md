@@ -34,3 +34,10 @@ python run.py --nodes 20 --mode Random --interval 15
 python run.py --nodes 5 --mode Periodic --interval 10
 
 panel serve dashboard.py --show
+
+## Mobilité optionnelle
+
+Dans le `dashboard`, la case « Activer la mobilité des nœuds » permet de choisir
+si les nœuds se déplacent pendant la simulation. Cette option correspond au
+paramètre `mobility` du `Simulator`. Si elle est décochée, tous les nœuds
+demeurent statiques.
