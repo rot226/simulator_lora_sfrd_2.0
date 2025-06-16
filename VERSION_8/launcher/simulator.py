@@ -21,7 +21,7 @@ class Simulator:
     def __init__(self, num_nodes: int = 10, num_gateways: int = 1, area_size: float = 1000.0,
                  transmission_mode: str = 'Random', packet_interval: float = 60.0,
                  packets_to_send: int = 0, adr_node: bool = False, adr_server: bool = False,
-                 duty_cycle: float | None = None):
+                 duty_cycle: float | None = None, mobility: bool = True):
         """
         Initialise la simulation LoRa avec les entités et paramètres donnés.
         :param num_nodes: Nombre de nœuds à simuler.
@@ -34,6 +34,8 @@ class Simulator:
         :param adr_server: Activation de l'ADR côté serveur.
         :param duty_cycle: Facteur de duty cycle (ex: 0.01 pour 1 %). Si None,
             le duty cycle est désactivé.
+        :param mobility: Active la mobilité aléatoire des nœuds lorsqu'il est
+            à True.
         """
         # Paramètres de simulation
         self.num_nodes = num_nodes
@@ -44,6 +46,8 @@ class Simulator:
         self.packets_to_send = packets_to_send
         self.adr_node = adr_node
         self.adr_server = adr_server
+        # Activation ou non de la mobilité des nœuds
+        self.mobility_enabled = mobility
 
         # Gestion du duty cycle
         self.duty_cycle_manager = DutyCycleManager(duty_cycle) if duty_cycle else None
@@ -108,7 +112,7 @@ class Simulator:
         # Journal des événements (pour export CSV)
         self.events_log = []
         
-        # Planifier le premier envoi de chaque nœud et le premier mouvement
+        # Planifier le premier envoi de chaque nœud
         for node in self.nodes:
             if self.transmission_mode.lower() == 'random':
                 # Random: tirer un délai initial selon une distribution exponentielle
@@ -117,8 +121,9 @@ class Simulator:
                 # Periodic: délai initial aléatoire uniforme dans [0, période]
                 t0 = np.random.rand() * self.packet_interval
             self.schedule_event(node, t0)
-            # Planifier le premier changement de position au bout de 10 secondes
-            self.schedule_mobility(node, 10.0)
+            # Planifier le premier changement de position si la mobilité est activée
+            if self.mobility_enabled:
+                self.schedule_mobility(node, 10.0)
         
         # Indicateur d'exécution de la simulation
         self.running = True
@@ -313,11 +318,14 @@ class Simulator:
         
         elif priority == 2:
             # Événement de mobilité (changement de position du nœud)
+            if not self.mobility_enabled:
+                return True
             node_id = node.id
             if node.in_transmission:
                 # Si le nœud est en cours de transmission, reporter le déplacement à la fin de celle-ci
                 next_move_time = node.current_end_time if node.current_end_time is not None else self.current_time
-                self.schedule_mobility(node, next_move_time)
+                if self.mobility_enabled:
+                    self.schedule_mobility(node, next_move_time)
             else:
                 # Déplacer le nœud à une nouvelle position aléatoire
                 node.x = np.random.rand() * self.area_size
@@ -335,7 +343,7 @@ class Simulator:
                     'gateway_id': None
                 })
                 # Planifier le prochain déplacement dans 10 secondes (si simulation toujours active)
-                if self.packets_to_send == 0 or self.packets_sent < self.packets_to_send:
+                if self.mobility_enabled and (self.packets_to_send == 0 or self.packets_sent < self.packets_to_send):
                     self.schedule_mobility(node, time + 10.0)
             return True
         

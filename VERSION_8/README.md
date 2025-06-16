@@ -40,3 +40,11 @@ Un gestionnaire de duty cycle simple est disponible via `duty_cycle.py`. Vous
 pouvez l'activer dans `Simulator` en passant le paramètre `duty_cycle` (par
 exemple `0.01` pour 1 %). Les transmissions seront automatiquement retardées
 afin de respecter cette contrainte.
+
+## Mobilité optionnelle
+
+La mobilité des nœuds peut désormais être activée ou désactivée lors de la
+création du `Simulator` grâce au paramètre `mobility` (booléen). Dans le
+`dashboard`, cette option correspond à la case « Activer la mobilité des
+nœuds ». Si elle est décochée, les positions des nœuds restent fixes pendant
+la simulation.
