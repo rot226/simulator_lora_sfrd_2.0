@@ -47,15 +47,12 @@ delay_indicator = pn.indicators.Number(name="Délai moyen (s)", value=0.0, forma
 # --- Chronomètre ---
 chrono_indicator = pn.indicators.Number(name="Durée simulation (s)", value=0, format="{value:.1f}")
 
-# --- Markdown pour la répartition SF ---
-sf_markdown = pn.pane.Markdown(
-    "**Répartition SF:**\n*(en nombre de nœuds)*\n"
-    "- SF7: 0\n- SF8: 0\n- SF9: 0\n- SF10: 0\n- SF11: 0\n- SF12: 0",
-    height=110
-)
 
 # --- Pane pour la carte des nœuds/passerelles ---
-map_pane = pn.pane.Plotly(height=400)
+map_pane = pn.pane.Plotly(height=500, sizing_mode='stretch_width')
+
+# --- Pane pour l'histogramme SF ---
+sf_hist_pane = pn.pane.Plotly(height=250, sizing_mode='stretch_width')
 
 # --- Fonctions de mobilité ---
 def initialize_node_velocities(nodes, vmax=2.0):
@@ -88,8 +85,10 @@ def update_map():
     fig = go.Figure()
     x_nodes = [node.x for node in sim.nodes]
     y_nodes = [node.y for node in sim.nodes]
-    fig.add_scatter(x=x_nodes, y=y_nodes, mode='markers', name='Nœuds',
-                    marker=dict(symbol='circle', color='blue', size=6))
+    node_ids = [str(node.id) for node in sim.nodes]
+    fig.add_scatter(x=x_nodes, y=y_nodes, mode='markers+text', name='Nœuds',
+                    text=node_ids, textposition='top center',
+                    marker=dict(symbol='circle', color='blue', size=8))
     x_gw = [gw.x for gw in sim.gateways]
     y_gw = [gw.y for gw in sim.gateways]
     fig.add_scatter(x=x_gw, y=y_gw, mode='markers', name='Passerelles',
@@ -137,8 +136,11 @@ def step_simulation():
     energy_indicator.value = metrics['energy_J']
     delay_indicator.value = metrics['avg_delay_s']
     sf_dist = metrics['sf_distribution']
-    sf_text = "**Répartition SF:**\n*(en nombre de nœuds)*\n" + "\n".join(f"- SF{sf}: {count}" for sf, count in sf_dist.items())
-    sf_markdown.object = sf_text
+    sf_fig = go.Figure(
+        data=[go.Bar(x=[f"SF{sf}" for sf in sf_dist.keys()], y=list(sf_dist.values()))]
+    )
+    sf_fig.update_layout(title="Répartition des SF par nœud", xaxis_title="SF", yaxis_title="Nombre de nœuds")
+    sf_hist_pane.object = sf_fig
     update_map()
     if not cont:
         on_stop(None)
@@ -183,9 +185,10 @@ def on_start(event):
     energy_indicator.value = 0
     delay_indicator.value = 0
     chrono_indicator.value = 0
-    sf_markdown.object = "**Répartition SF:**\n" + "\n".join(
-        f"- SF{sf}: {sum(1 for node in sim.nodes if node.sf == sf)}" for sf in range(7, 13)
-    )
+    sf_counts = {sf: sum(1 for node in sim.nodes if node.sf == sf) for sf in range(7, 13)}
+    sf_fig = go.Figure(data=[go.Bar(x=[f"SF{sf}" for sf in sf_counts.keys()], y=list(sf_counts.values()))])
+    sf_fig.update_layout(title="Répartition des SF par nœud", xaxis_title="SF", yaxis_title="Nombre de nœuds")
+    sf_hist_pane.object = sf_fig
     num_nodes_input.disabled = True
     num_gateways_input.disabled = True
     area_input.disabled = True
@@ -290,8 +293,15 @@ controls = pn.WidgetBox(
 
 metrics_col = pn.Column(
     chrono_indicator,
-    pdr_indicator, collisions_indicator, energy_indicator, delay_indicator, sf_markdown
+    pdr_indicator,
+    collisions_indicator,
+    energy_indicator,
+    delay_indicator,
 )
 
-dashboard = pn.Column(controls, pn.Row(map_pane, metrics_col))
+dashboard = pn.Column(
+    controls,
+    pn.Row(map_pane, metrics_col, sizing_mode='stretch_width'),
+    sf_hist_pane,
+)
 dashboard.servable()
