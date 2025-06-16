@@ -21,6 +21,7 @@ Bienvenue ! Ce projet est un **simulateur complet de réseau LoRa**, inspiré du
    ```bash
    python3 -m venv env
    source env/bin/activate  # Sous Windows : env\Scripts\activate
+```
 
 pip install -r requirements.txt
 
