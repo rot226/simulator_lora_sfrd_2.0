@@ -33,3 +33,10 @@ python run.py --nodes 20 --mode Random --interval 15
 python run.py --nodes 5 --mode Periodic --interval 10
 
 panel serve dashboard.py --show
+
+## Duty cycle
+
+Un gestionnaire de duty cycle simple est disponible via `duty_cycle.py`. Vous
+pouvez l'activer dans `Simulator` en passant le paramètre `duty_cycle` (par
+exemple `0.01` pour 1 %). Les transmissions seront automatiquement retardées
+afin de respecter cette contrainte.

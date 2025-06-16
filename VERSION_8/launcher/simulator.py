@@ -7,6 +7,7 @@ from node import Node
 from gateway import Gateway
 from channel import Channel
 from server import NetworkServer
+from duty_cycle import DutyCycleManager
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,8 @@ class Simulator:
     
     def __init__(self, num_nodes: int = 10, num_gateways: int = 1, area_size: float = 1000.0,
                  transmission_mode: str = 'Random', packet_interval: float = 60.0,
-                 packets_to_send: int = 0, adr_node: bool = False, adr_server: bool = False):
+                 packets_to_send: int = 0, adr_node: bool = False, adr_server: bool = False,
+                 duty_cycle: float | None = None):
         """
         Initialise la simulation LoRa avec les entités et paramètres donnés.
         :param num_nodes: Nombre de nœuds à simuler.
@@ -30,6 +32,8 @@ class Simulator:
         :param packets_to_send: Nombre total de paquets à émettre avant d'arrêter la simulation (0 = infini).
         :param adr_node: Activation de l'ADR côté nœud.
         :param adr_server: Activation de l'ADR côté serveur.
+        :param duty_cycle: Facteur de duty cycle (ex: 0.01 pour 1 %). Si None,
+            le duty cycle est désactivé.
         """
         # Paramètres de simulation
         self.num_nodes = num_nodes
@@ -40,6 +44,9 @@ class Simulator:
         self.packets_to_send = packets_to_send
         self.adr_node = adr_node
         self.adr_server = adr_server
+
+        # Gestion du duty cycle
+        self.duty_cycle_manager = DutyCycleManager(duty_cycle) if duty_cycle else None
         
         # Initialiser le canal radio et le serveur réseau
         self.channel = Channel()
@@ -120,6 +127,8 @@ class Simulator:
         """Planifie un événement de transmission pour un nœud à l'instant donné."""
         event_id = self.event_id_counter
         self.event_id_counter += 1
+        if self.duty_cycle_manager:
+            time = self.duty_cycle_manager.enforce(node.id, time)
         heapq.heappush(self.event_queue, (time, 1, event_id, node))
         logger.debug(f"Scheduled transmission {event_id} for node {node.id} at t={time:.2f}s")
     
@@ -147,6 +156,8 @@ class Simulator:
             # Durée de la transmission
             duration = self.channel.airtime(sf)
             end_time = time + duration
+            if self.duty_cycle_manager:
+                self.duty_cycle_manager.update_after_tx(node_id, time, duration)
             # Mettre à jour le compteur de paquets émis
             self.packets_sent += 1
             # Énergie consommée par la transmission (E = P(mW) * t)
