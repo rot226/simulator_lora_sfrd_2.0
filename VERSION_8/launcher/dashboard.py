@@ -11,7 +11,8 @@ import os
 
 # --- Initialisation Panel ---
 pn.extension('plotly')
-pn.config.title = "Simulateur LoRa"
+# Définition du titre de la page via le document Bokeh directement
+pn.state.curdoc.title = "Simulateur LoRa"
 
 # --- Variables globales ---
 sim = None
