@@ -3,11 +3,12 @@ import heapq
 import numpy as np
 import pandas as pd
 import logging
-from node import Node
-from gateway import Gateway
-from channel import Channel
-from server import NetworkServer
-from duty_cycle import DutyCycleManager
+
+from .node import Node
+from .gateway import Gateway
+from .channel import Channel
+from .server import NetworkServer
+from .duty_cycle import DutyCycleManager
 
 logger = logging.getLogger(__name__)
 
