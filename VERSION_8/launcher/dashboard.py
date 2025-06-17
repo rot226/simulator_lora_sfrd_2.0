@@ -1,9 +1,19 @@
+import os
+import sys
+
 import panel as pn
 import pandas as pd
 import plotly.graph_objects as go
-# Import du simulateur depuis le paquet `launcher`
-# afin que les imports relatifs internes fonctionnent lorsque
-# ce script est servi avec Panel depuis la racine du projet.
+
+# Assurer la résolution correcte des imports quel que soit le répertoire
+# depuis lequel ce fichier est exécuté. On ajoute le dossier parent
+# (celui contenant le paquet ``launcher``) au ``sys.path`` s'il n'y est pas
+# déjà. Ainsi, ``from launcher.simulator`` fonctionnera aussi avec la
+# commande ``panel serve dashboard.py`` exécutée depuis ce dossier.
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
 from launcher.simulator import Simulator
 import numpy as np
 import time
